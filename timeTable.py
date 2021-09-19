@@ -1,34 +1,41 @@
 
 
-from datetime import date, datetime, timedelta, time, timezone, tzinfo
+from _typeshed import Self
+from datetime import date, datetime, timedelta, time, timezone
 from googleapiclient.discovery import Resource, build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from typing import List, Tuple, TYPE_CHECKING
 
+import os
+
 if TYPE_CHECKING : 
     from slot import Slot
 
-import os
 
-class TimeTable () : 
+class TimeTable () :
+
+    """
+    This object holds the setting for the genreal structure of you time-table and also all the courses and events that have been added.
+    It computes your class slots, based on the parameters provided and alows you to easily add slots with slot numbers.
+    It is also responsible to connect to google calenders and insert your timetable      
+    """ 
     WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-    def __init__ (self, name:str,  until : datetime) :
-
+    def __init__ (self, name:str,  until : datetime, **config) :
+        
         # Constants that can be manually edited
         self.TZ_STR = "Asia/Kolkata"
         self.TZ = timezone(timedelta(hours=5, minutes=30))
         self.MORNING_START_TIME = time(hour=8)
         self.EVENING_START_TIME = time(hour=14)
         self.THEORY_DELTA = timedelta(minutes=55)
-        self.LAB_DELTA = timedelta(minutes=50)
-        self.BREAK_DELTA = timedelta(minutes=5)
+        self.LAB_DELTA = timedelta(minutes=55)
         self.MORNING_SLOTS = 6
         self.EVENING_SLOTS = 6
-
+        self.SLOTS = self.MORNING_SLOTS + self.EVENING_SLOTS
 
         self.name = name
         self.endDate = until
@@ -38,7 +45,7 @@ class TimeTable () :
         self.dates = self._computeDates()
         self.service = self._serviceBuilder()
         
-        
+        self.__dict__.update(config)
 
     def _buildTheorySlots (self) -> Tuple[time]:
         theorySlots = []
