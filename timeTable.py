@@ -29,10 +29,10 @@ class TimeTable () :
         Defult Configuration of Time Slot Generator: 
             TZ_STR = "Asia/Kolkata"
             TZ = timezone(timedelta(hours=5, minutes=30))
-            morningStartTime = time(hour=8)
-            eveningStartTime = time(hour=14)
-            classDelta = timedelta(minutes=50)
-            breakDelta = timedelta(minutes=5)
+            morningStartTime = time(hour=8) #Start before break
+            eveningStartTime = time(hour=14) #Start after break
+            classDelta = timedelta(minutes=50) The duration of each class
+            breakDelta = (timedelta(minutes=5),) The break between classes
             morningSlots = 6
             eveningSlots = 6
         """
@@ -42,7 +42,7 @@ class TimeTable () :
         self.morningStartTime = time(hour=8)
         self.eveningStartTime = time(hour=14)
         self.classDelta = timedelta(minutes=50)
-        self.breakDelta = timedelta(minutes=5)
+        self.breakDelta = (timedelta(minutes=5), )
         self.morningSlots = 6
         self.eveningSlots = 6
 
@@ -62,13 +62,13 @@ class TimeTable () :
         self.dates = self._computeDates()
         self.service = self._serviceBuilder()
         
-    def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:timedelta) -> Tuple[Tuple[time,time]]:
+    def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:Tuple[timedelta]) -> Tuple[Tuple[time,time]]:
         timeSlots = []
         pointer = startTime
         for i in range(slots+1) : 
             duration = (pointer, self._addToTime(pointer, slotDelta))
             timeSlots.append(duration) 
-            pointer = self._addToTime(duration[1], breakDelta)
+            pointer = self._addToTime(duration[1], breakDelta[i % len(breakDelta)])
 
         return tuple(timeSlots)   
     
