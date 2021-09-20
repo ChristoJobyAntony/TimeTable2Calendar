@@ -2,14 +2,16 @@
  
 ***A python program to automate adding your School/College timetables to your google calendar using  google calendar API.***
 
-
-To use this application, you need to create a google cloud platform project and  the authorization credentials for a desktop application and save under the root directory as "credentials.json"
+### Installation
+1. Clone the project and download it.
+2. Create a google cloud platform project and enable google calendar API [helo](https://developers.google.com/workspace/guides/create-project)
+3. Create authorization credentials for a desktop application [help](https://developers.google.com/workspace/guides/create-credentials)
+4. Download the credentials save it  under the root directory as "credentials.json" 
+5. Follow the quick setup guide or create your script in the root directory and import the necessary classes
  
-
  
 ### Quick Setup 
-    Refer to example.py for quick setup
-        
+ The example.py has detailed instructions on how to setup and use the program, copy it to the root directory and use it.
  
  
 ### The TimeTable Object : 
@@ -30,7 +32,7 @@ TZ = timezone(timedelta(hours=5, minutes=30))
 }
 ```
 
-- Defualt time-table construction : 
+- Default time-table construction : 
  ```
  theoryTimeTable =  TimeTable(name='First Semester - Theory ', until=date(2022,2, 1) )
  ```
@@ -38,7 +40,7 @@ TZ = timezone(timedelta(hours=5, minutes=30))
 ```
 theoryTimeTable =  TimeTable(name='First Semester - Theory ', until=date(2022,2, 1), **{"morningStartTime":time(10, 00)})
 ```
-- Cutsom Template time-table construction : 
+- Custom Template time-table construction : 
 ```
 template = (
     (time(8,00), time(8,50)),
@@ -67,7 +69,3 @@ BMAT101L = Course(
 
 ### The event Object
 This is just an object to enforce types on the calendar api's event object, to allow for easier handling.
- 
- 
- 
-
