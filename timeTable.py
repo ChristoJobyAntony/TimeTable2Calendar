@@ -8,6 +8,7 @@ from enums import Days
 from slot import Slot
 import os
 
+
 if TYPE_CHECKING : 
     from course import Course
 
@@ -17,23 +18,9 @@ WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday',
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
-MORNING_START_TIME = time(hour=8)
-EVENING_START_TIME = time(hour=14)
-
-THEORY_DELTA = timedelta(minutes=50)
-THEORY_BREAK = timedelta(minutes=10)
-
-LAB_DELTA = timedelta(minutes=50)
-# Lab break is alternating 0, 10
-LAB_BREAK = timedelta(minutes=0), timedelta(minutes=10)
-MORNING_SLOTS = 6
-EVENING_SLOTS = 6
-
-
-
 class TimeTable () :
 
-    def __init__ (self, name:str,  until : datetime, template : Tuple[Tuple[time,time]] = None, **config) :
+    def __init__ (self, name:str,  until : datetime, template : Tuple[Tuple[time, time]] = None, **config) :
         """
         This object holds the setting for the general structure of you time-table. 
         You can provide a custom template or configure the  standard time slot generator      
@@ -67,6 +54,9 @@ class TimeTable () :
         self.name = name
         self.endDate = until
         self.events : List['Slot'] = []
+        self.dates = self._computeDates()
+        self.service = self._serviceBuilder()
+
         if  not template  : 
             self.timeSlots = self._buildTimeSlots(self.morningSlots, self.morningStartTime, self.classDelta, self.breakDelta) + self._buildTimeSlots(self.eveningSlots, self.eveningStartTime, self.classDelta, self.breakDelta)
             self.SLOTS = self.eveningSlots + self.morningSlots
@@ -74,12 +64,6 @@ class TimeTable () :
             self.timeSlots = template
             self.SLOTS = len(template)
 
-        
-        self.dates = self._computeDates()
-        self.service = self._serviceBuilder() 
-        
-        self.__dict__.update(config)
-    
     def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:Tuple[timedelta]) -> Tuple[Tuple[time,time]]:
         timeSlots = []
         pointer = startTime
@@ -89,7 +73,7 @@ class TimeTable () :
             pointer = self._addToTime(duration[1], breakDelta[i % len(breakDelta)])
 
         return tuple(timeSlots)   
-    
+
     def _computeDates (self) -> Tuple[date] :
         pointer = date.today()
         aDay = timedelta(days=1)
@@ -138,10 +122,8 @@ class TimeTable () :
 
     def addToCalendar (self, dry_run=False) -> List[dict] :
         """Adds the registered course to your google calendar 
-
         Args:
             dry_run (bool, optional): Prints a verbose of all the events to be registered to the console. Defaults to False.
-
         Returns:
             List[dict]: Returns the google API response
         """
@@ -150,7 +132,6 @@ class TimeTable () :
                 print(event.event)
             return []
         
-        calendar = self._createcalendar()
         calendar = self._createCalendar()
         events : List[str] = []
         for event in self.events : 
@@ -160,7 +141,6 @@ class TimeTable () :
 
     def register(self, course_dict:Dict['Days', Dict[int, 'Course']]):
         """Register courses to the time table
-
         Args:
             course_dict (Dict[Days, Dict[int, Course]]): Pass a dictionary in format {Days : {<slot-id>, <course>} }
         """
@@ -182,5 +162,3 @@ class TimeTable () :
                 self.events.append(slot)
     
         
-
-
