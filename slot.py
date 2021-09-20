@@ -1,19 +1,22 @@
 from typing import Dict, TYPE_CHECKING
-from timeTable import TimeTable
 from datetime import datetime, time, timedelta, date,timezone, tzinfo
 
 if TYPE_CHECKING : 
     from course import Course
 
-class Slot : 
 
-    def __init__(self, date:date, startTime:time, endTime: time, timeTable:TimeTable, course:'Course') -> None:
+class Slot:
+    def __init__(self, date: date, startTime:time, endTime: time, timeTable: 'TimeTable') -> None:
         self.eventDate = date
         self.timeTable = timeTable
-        self.course = course
         self.startTime = startTime
         self.endTime = endTime
+        self.course = None
+
+    def register_course(self, course: 'Course'):
+        self.course = course
         self.event = self._createEvent()
+        self.timeTable.events.append(self)
 
     def _createEvent(self) ->  Dict[str,any]: 
         startDateTime = datetime.combine(self.eventDate, self.startTime, tzinfo=self.timeTable.TZ)
@@ -34,6 +37,10 @@ class Slot :
             'RRULE:FREQ=WEEKLY;UNTIL='+until,
         ],
     }
+
+    def __repr__(self):
+        name = self.course.name if self.course else 'Empty'
+        return f"{self.course.name} ({self.eventDate.weekday()} {self.startTime} - {self.endTime})"
 
 
 
