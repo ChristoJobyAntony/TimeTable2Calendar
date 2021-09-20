@@ -1,76 +1,76 @@
-
-
-from _typeshed import Self
+from course import Course
 from datetime import date, datetime, timedelta, time, timezone
+from enums import Days
 from googleapiclient.discovery import Resource, build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from typing import List, Tuple, TYPE_CHECKING
+from typing import Dict, List, Tuple, TYPE_CHECKING
+from slot import Slot
 
 import os
 
-if TYPE_CHECKING : 
-    from slot import Slot
 
+
+WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 class TimeTable () :
 
-    """
-    This object holds the setting for the genreal structure of you time-table and also all the courses and events that have been added.
-    It computes your class slots, based on the parameters provided and alows you to easily add slots with slot numbers.
-    It is also responsible to connect to google calenders and insert your timetable      
-    """ 
-    WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
-
-    def __init__ (self, name:str,  until : datetime, **config) :
+    def __init__ (self, name:str,  until : datetime, template : Tuple[Tuple[time,time]] = None, **config) :
+        """
+        This object holds the setting for the general structure of you time-table. 
+        You can provide a custom template or configure the  standard time slot generator      
+        Args:
+            name (str): [description]
+            until (datetime): [description]
+            template (tuple[tuple[time,time]]): [description]
+            **config : use to configure the time zone and the default time slot builder       
+        Defult Configuration of Time Slot Generator: 
+            self.TZ_STR = "Asia/Kolkata"
+            self.TZ = timezone(timedelta(hours=5, minutes=30))
+            self.MORNING_START_TIME = time(hour=8)
+            self.EVENING_START_TIME = time(hour=14)
+            self.DELTA = timedelta(minutes=50)
+            self.BREAK = timedelta(minutes=5)
+            self.MORNING_SLOTS = 6
+            self.EVENING_SLOTS = 6
+        """
         
-        # Constants that can be manually edited
         self.TZ_STR = "Asia/Kolkata"
         self.TZ = timezone(timedelta(hours=5, minutes=30))
         self.MORNING_START_TIME = time(hour=8)
         self.EVENING_START_TIME = time(hour=14)
-        self.THEORY_DELTA = timedelta(minutes=55)
-        self.LAB_DELTA = timedelta(minutes=55)
+        self.DELTA = timedelta(minutes=50)
+        self.BREAK = timedelta(minutes=5)
         self.MORNING_SLOTS = 6
         self.EVENING_SLOTS = 6
-        self.SLOTS = self.MORNING_SLOTS + self.EVENING_SLOTS
+
+        self.__dict__.update(config)
 
         self.name = name
         self.endDate = until
         self.events : List['Slot'] = []
-        self.theorySlots = self._buildTheorySlots()
-        self.labSlots = self._buildLabSlots()
+        if  not template  : 
+            self.timeSlots = self._buildTimeSlots(self.MORNING_SLOTS, self.MORNING_START_TIME, self.DELTA, self.BREAK) + self._buildTimeSlots(self.EVENING_SLOTS, self.EVENING_START_TIME, self.DELTA, self.BREAK)
+            self.SLOTS = self.EVENING_SLOTS + self.MORNING_SLOTS
+        else : 
+            self.timeSlots = template
+            self.SLOTS = len(template)
+
+        
         self.dates = self._computeDates()
         self.service = self._serviceBuilder()
         
-        self.__dict__.update(config)
+    def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:timedelta) -> Tuple[Tuple[time,time]]:
+        timeSlots = []
+        pointer = startTime
+        for i in range(slots+1) : 
+            duration = (pointer, self._addToTime(pointer, slotDelta))
+            timeSlots.append(duration) 
+            pointer = self._addToTime(duration[1], breakDelta)
 
-    def _buildTheorySlots (self) -> Tuple[time]:
-        theorySlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            theorySlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            theorySlots.append(pointer)
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
-        return tuple(theorySlots)
-    
-    def _buildLabSlots (self) -> Tuple[time] : 
-        labSlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            labSlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
-
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            labSlots.append(pointer)
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
-        return tuple(labSlots)
+        return tuple(timeSlots)   
     
     def _computeDates (self) -> Tuple[date] :
         pointer = date.today()
@@ -82,31 +82,31 @@ class TimeTable () :
         return tuple(dates)
 
     def _authenticate (self) -> Credentials :
-        creds = None
+        credentials = None
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
         if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
-            return creds
+            credentials = Credentials.from_authorized_user_file('token.json', SCOPES)
+            return credentials
         # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+        if not credentials or not credentials.valid:
+            if credentials and credentials.expired and credentials.refresh_token:
+                credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', self.SCOPES)
-                creds = flow.run_local_server(port=0)
+                credentials = flow.run_local_server(port=0)
             # Save the credentials for the next run
             with open('token.json', 'w') as token:
-                token.write(creds.to_json())
+                token.write(credentials.to_json())
             
-            return creds
+            return credentials
     
     def _serviceBuilder (self) -> Resource :
         return build('calendar', 'v3', credentials=self._authenticate())
     
-    def _createCalender (self) -> str :
+    def _createCalendar (self) -> str :
         calendar = {
             'summary': self.name,
             'timeZone': self.TZ_STR
@@ -114,22 +114,54 @@ class TimeTable () :
         created_calendar = self.service.calendars().insert(body=calendar).execute()
         return created_calendar['id']
 
-    def addToClaneder (self, dry_run=False) -> List[str] :
+    def _addToTime (self, t : time, d : timedelta) -> time :
+        dt = datetime(100, 1, 1, t.hour, t.minute, t.second) + d
+        return dt.time()
+
+    def addToCalendar (self, dry_run=False) -> List[dict] :
+        """Adds the registered course to your google calendar 
+
+        Args:
+            dry_run (bool, optional): Prints a verbose of all the events to be registered to the console. Defaults to False.
+
+        Returns:
+            List[dict]: Returns the google API response
+        """
         if dry_run : 
             for event in self.events  :
                 print(event.event)
             return []
         
-        calender = self._createCalender()
+        calendar = self._createCalendar()
         events : List[str] = []
         for event in self.events : 
-            event = self.service.events().insert(calendarId=calender, body=event.event).execute()
+            event = self.service.events().insert(calendarId=calendar, body=event.event).execute()
             events.append(event)
         return events
 
-    def _addToTime (self, t : time, d : timedelta) -> time :
-        dt = datetime(100, 1, 1, t.hour, t.minute, t.second) + d
-        return dt.time()
+    def register(self, course_dict:Dict[Days, Dict[int, Course]]):
+        """Register courses to the time table
+
+        Args:
+            course_dict (Dict[Days, Dict[int, Course]]): Pass a dictionary in format {Days : {<slot-id>, <course>} }
+        """
+        for day, courses in course_dict.items() :
+            for slot_id, course in courses.items():
+                assert slot_id > 0 and slot_id <= (self.SLOTS)
+                if not course  :continue
+                slot_id -= 1
+                date = self.dates[day.value]
+                # Check if block periods : 
+                if  courses.get(slot_id+2) == course : 
+                    startTime = self.timeSlots[slot_id][0]
+                    endTime = self.timeSlots[slot_id + 1][1]
+                    courses[slot_id+2] = None
+                else : 
+                    startTime, endTime = self.timeSlots[slot_id]
+                slot = Slot(date, startTime, endTime, self, course)
+                course.events.append(slot)
+                self.events.append(slot)
+    
         
 
 

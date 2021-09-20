@@ -1,16 +1,17 @@
+from enums import Days
 from typing import Dict, TYPE_CHECKING
-from timeTable import TimeTable
 from datetime import datetime, time, date
 
 if TYPE_CHECKING : 
     from course import Course
+    from timeTable import WEEK_DAYS, TimeTable
 
 class Slot : 
-    """
-    This is a simple python class wrapper for the the google events dictionary,
-    """
-    def __init__(self, date:date, startTime:time, endTime: time, timeTable:TimeTable, course:'Course') -> None:
+
+    def __init__(self, date:date, startTime:time, endTime: time, timeTable:'TimeTable', course:'Course') -> None:
         """
+        This is a simple python class wrapper for the the google events dictionary,
+        
         Args:
             date (date): Date for class event
             startTime (time)
@@ -47,6 +48,9 @@ class Slot :
         }
         return event
 
+    def __repr__(self):
+        weekday = WEEK_DAYS[self.eventDate.weekday()]
+        return f"{self.course.name} ({weekday} {self.startTime} - {self.endTime})"
 
 
 
