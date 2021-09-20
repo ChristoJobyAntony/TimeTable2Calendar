@@ -27,24 +27,24 @@ class TimeTable () :
             template (tuple[tuple[time,time]]): [description]
             **config : use to configure the time zone and the default time slot builder       
         Defult Configuration of Time Slot Generator: 
-            self.TZ_STR = "Asia/Kolkata"
-            self.TZ = timezone(timedelta(hours=5, minutes=30))
-            self.MORNING_START_TIME = time(hour=8)
-            self.EVENING_START_TIME = time(hour=14)
-            self.DELTA = timedelta(minutes=50)
-            self.BREAK = timedelta(minutes=5)
-            self.MORNING_SLOTS = 6
-            self.EVENING_SLOTS = 6
+            TZ_STR = "Asia/Kolkata"
+            TZ = timezone(timedelta(hours=5, minutes=30))
+            morningStartTime = time(hour=8)
+            eveningStartTime = time(hour=14)
+            classDelta = timedelta(minutes=50)
+            breakDelta = timedelta(minutes=5)
+            morningSlots = 6
+            eveningSlots = 6
         """
         
         self.TZ_STR = "Asia/Kolkata"
         self.TZ = timezone(timedelta(hours=5, minutes=30))
-        self.MORNING_START_TIME = time(hour=8)
-        self.EVENING_START_TIME = time(hour=14)
-        self.DELTA = timedelta(minutes=50)
-        self.BREAK = timedelta(minutes=5)
-        self.MORNING_SLOTS = 6
-        self.EVENING_SLOTS = 6
+        self.morningStartTime = time(hour=8)
+        self.eveningStartTime = time(hour=14)
+        self.classDelta = timedelta(minutes=50)
+        self.breakDelta = timedelta(minutes=5)
+        self.morningSlots = 6
+        self.eveningSlots = 6
 
         self.__dict__.update(config)
 
@@ -52,8 +52,8 @@ class TimeTable () :
         self.endDate = until
         self.events : List['Slot'] = []
         if  not template  : 
-            self.timeSlots = self._buildTimeSlots(self.MORNING_SLOTS, self.MORNING_START_TIME, self.DELTA, self.BREAK) + self._buildTimeSlots(self.EVENING_SLOTS, self.EVENING_START_TIME, self.DELTA, self.BREAK)
-            self.SLOTS = self.EVENING_SLOTS + self.MORNING_SLOTS
+            self.timeSlots = self._buildTimeSlots(self.morningSlots, self.morningStartTime, self.classDelta, self.breakDelta) + self._buildTimeSlots(self.eveningSlots, self.eveningStartTime, self.classDelta, self.breakDelta)
+            self.SLOTS = self.eveningSlots + self.morningSlots
         else : 
             self.timeSlots = template
             self.SLOTS = len(template)
