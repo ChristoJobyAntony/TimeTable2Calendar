@@ -60,6 +60,8 @@ class TimeTable () :
 
         
         self.dates = self._computeDates()
+        self.theorySlots = self._buildTheorySlots()
+        self.labSlots = self._buildLabSlots() 
         self.service = self._serviceBuilder()
         
     def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:Tuple[timedelta]) -> Tuple[Tuple[time,time]]:

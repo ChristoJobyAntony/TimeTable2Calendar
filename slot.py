@@ -6,7 +6,6 @@ if TYPE_CHECKING :
     from course import Course
     from timeTable import WEEK_DAYS, TimeTable
 
-class Slot : 
 
     def __init__(self, date:date, startTime:time, endTime: time, timeTable:'TimeTable', course:'Course') -> None:
         """
@@ -21,10 +20,10 @@ class Slot :
         """
         self.eventDate = date
         self.timeTable = timeTable
-        self.course = course
         self.startTime = startTime
         self.endTime = endTime
-        self.event = self._createEvent()
+        self.course = course
+        self._createEvent()
 
     def _createEvent(self) ->  Dict[str,any]: 
         startDateTime = datetime.combine(self.eventDate, self.startTime, tzinfo=self.timeTable.TZ)
@@ -47,6 +46,10 @@ class Slot :
             ],
         }
         return event
+
+    def __repr__(self):
+        weekday = WEEK_DAYS[self.eventDate.weekday()]
+        return f"{self.course.name} ({weekday} {self.startTime} - {self.endTime})"
 
     def __repr__(self):
         weekday = WEEK_DAYS[self.eventDate.weekday()]
