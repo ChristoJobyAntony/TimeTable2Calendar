@@ -1,29 +1,15 @@
-from course import Course
 from datetime import date, datetime, timedelta, time, timezone
-from enums import Days
 from googleapiclient.discovery import Resource, build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from typing import Dict, List, Tuple, TYPE_CHECKING
+from enums import Days
 from slot import Slot
-
 import os
 
 if TYPE_CHECKING : 
-    from slot import Slot
-
-
-class TimeTable () :
-
-    """
-    This object holds the setting for the genreal structure of you time-table and also all the courses and events that have been added.
-    It computes your class slots, based on the parameters provided and alows you to easily add slots with slot numbers.
-    It is also responsible to connect to google calendars and insert your timetable      
-    """ 
-    WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-
+    from course import Course
 
 
 
@@ -44,45 +30,6 @@ MORNING_SLOTS = 6
 EVENING_SLOTS = 6
 
 
-class TimeTable: 
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
-
-    def __init__ (self, name:str,  until : datetime, template :tuple[tuple[time, time]]= None, **config) :
-        
-        # Constants that can be manually edited
-        """
-        Set the timezone for all the times and date provided !
-        """
-        self.TZ_STR = "Asia/Kolkata"
-        self.TZ = timezone(timedelta(hours=5, minutes=30))
-
-
-        """
-        Configs for auto-generating a time table with regular durations and a single break
-        """
-        self.MORNING_START_TIME = time(hour=8)
-        self.EVENING_START_TIME = time(hour=14)
-        self.CLASS_DELTA = timedelta(minutes=55)
-        self.MORNING_SLOTS = 6
-        self.EVENING_SLOTS = 6
-
-        self.SLOTS = self.MORNING_SLOTS + self.EVENING_SLOTS
-
-        self.name = name
-        self.endDate = until
-        self.events : List['Slot'] = []
-        # Compute the time-table slots if none are provided 
-        if not template : 
-            self.timeSlots = self._buildSlots(self.MORNING_SLOTS, self.MORNING_START_TIME, self.CLASS_DELTA) + self._buildSlots(self.EVENING_SLOTS, self.EVENING_START_TIME, self.CLASS_DELTA)
-        else : 
-            self.timeSlots = template
-            self.SLOTS = len(template)
-
-
-
-        self.name = name
-        self.endDate = until
-        self.events: List['Slot'] = []
 
 class TimeTable () :
 
@@ -129,49 +76,10 @@ class TimeTable () :
 
         
         self.dates = self._computeDates()
-        self.theorySlots = self._buildTheorySlots()
-        self.labSlots = self._buildLabSlots() 
-        self.service = self._serviceBuilder()
-
-
-
-    
+        self.service = self._serviceBuilder() 
         
         self.__dict__.update(config)
-
-    def _buildSlots (self, slots, start : time, duration : timedelta) -> Tuple[Tuple[time,time]]:
-        theorySlots = []
-        pointer = start
-        for i in range(slots+1) : 
-            duration = (pointer, self._addToTime(pointer, self.CLASS_DELTA))
-            theorySlots.append(duration) 
-            pointer = duration[0]
-        
-        return tuple(theorySlots)
-
-
-
-    def _build_slots(self, total_slots: int, start_time: time, slot_time: timedelta, break_times):
-        slots = []
-        if not isinstance(break_times, (list, tuple)):
-            break_times = (break_times,)
-
-        for i in range(total_slots):
-            end_time = self._addToTime(start_time, slot_time)
-            slots.append((start_time, end_time))
-            start_time = self._addToTime(end_time, break_times[i % len(break_times)])
-        return slots
-
-    def _buildTheorySlots(self):
-        slots = self._build_slots(MORNING_SLOTS, MORNING_START_TIME, THEORY_DELTA, THEORY_BREAK)
-        slots += self._build_slots(EVENING_SLOTS, EVENING_START_TIME, THEORY_DELTA, THEORY_BREAK)
-        return slots
     
-    def _buildLabSlots(self) : 
-        slots = self._build_slots(MORNING_SLOTS, MORNING_START_TIME, LAB_DELTA, LAB_BREAK)
-        slots += self._build_slots(EVENING_SLOTS, EVENING_START_TIME, LAB_DELTA, LAB_BREAK)
-        return slots
-        
     def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:Tuple[timedelta]) -> Tuple[Tuple[time,time]]:
         timeSlots = []
         pointer = startTime
@@ -250,7 +158,7 @@ class TimeTable () :
             events.append(event)
         return events
 
-    def register(self, course_dict:Dict[Days, Dict[int, Course]]):
+    def register(self, course_dict:Dict['Days', Dict[int, 'Course']]):
         """Register courses to the time table
 
         Args:

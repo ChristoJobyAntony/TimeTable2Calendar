@@ -7,7 +7,7 @@ To use this application, you need to create a google cloud platform project and 
  
 
  
-###Quick Setup 
+### Quick Setup 
     Refer to example.py for quick setup
         
  
