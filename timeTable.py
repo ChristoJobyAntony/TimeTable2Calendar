@@ -19,59 +19,58 @@ class TimeTable () :
     """
     This object holds the setting for the genreal structure of you time-table and also all the courses and events that have been added.
     It computes your class slots, based on the parameters provided and alows you to easily add slots with slot numbers.
-    It is also responsible to connect to google calenders and insert your timetable      
+    It is also responsible to connect to google calendars and insert your timetable      
     """ 
     WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-    def __init__ (self, name:str,  until : datetime, **config) :
+    def __init__ (self, name:str,  until : datetime, template :tuple[tuple[time, time]]= None, **config) :
         
         # Constants that can be manually edited
+        """
+        Set the timezone for all the times and date provided !
+        """
         self.TZ_STR = "Asia/Kolkata"
         self.TZ = timezone(timedelta(hours=5, minutes=30))
+
+        """
+        Configs for auto-generating a time table with regular durations and a single break
+        """
         self.MORNING_START_TIME = time(hour=8)
         self.EVENING_START_TIME = time(hour=14)
-        self.THEORY_DELTA = timedelta(minutes=55)
-        self.LAB_DELTA = timedelta(minutes=55)
+        self.CLASS_DELTA = timedelta(minutes=55)
         self.MORNING_SLOTS = 6
         self.EVENING_SLOTS = 6
+
         self.SLOTS = self.MORNING_SLOTS + self.EVENING_SLOTS
 
         self.name = name
         self.endDate = until
         self.events : List['Slot'] = []
-        self.theorySlots = self._buildTheorySlots()
-        self.labSlots = self._buildLabSlots()
+        # Compute the time-table slots if none are provided 
+        if not template : 
+            self.timeSlots = self._buildSlots(self.MORNING_SLOTS, self.MORNING_START_TIME, self.CLASS_DELTA) + self._buildSlots(self.EVENING_SLOTS, self.EVENING_START_TIME, self.CLASS_DELTA)
+        else : 
+            self.timeSlots = template
+            self.SLOTS = len(template)
+
         self.dates = self._computeDates()
         self.service = self._serviceBuilder()
+
+    
         
         self.__dict__.update(config)
 
-    def _buildTheorySlots (self) -> Tuple[time]:
+    def _buildSlots (self, slots, start : time, duration : timedelta) -> Tuple[Tuple[time,time]]:
         theorySlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            theorySlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            theorySlots.append(pointer)
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
+        pointer = start
+        for i in range(slots+1) : 
+            duration = (pointer, self._addToTime(pointer, self.CLASS_DELTA))
+            theorySlots.append(duration) 
+            pointer = duration[0]
+        
         return tuple(theorySlots)
-    
-    def _buildLabSlots (self) -> Tuple[time] : 
-        labSlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            labSlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
 
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            labSlots.append(pointer)
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
-        return tuple(labSlots)
-    
     def _computeDates (self) -> Tuple[date] :
         pointer = date.today()
         aDay = timedelta(days=1)
@@ -106,7 +105,7 @@ class TimeTable () :
     def _serviceBuilder (self) -> Resource :
         return build('calendar', 'v3', credentials=self._authenticate())
     
-    def _createCalender (self) -> str :
+    def _createcalendar (self) -> str :
         calendar = {
             'summary': self.name,
             'timeZone': self.TZ_STR
@@ -120,10 +119,10 @@ class TimeTable () :
                 print(event.event)
             return []
         
-        calender = self._createCalender()
+        calendar = self._createcalendar()
         events : List[str] = []
         for event in self.events : 
-            event = self.service.events().insert(calendarId=calender, body=event.event).execute()
+            event = self.service.events().insert(calendarId=calendar, body=event.event).execute()
             events.append(event)
         return events
 

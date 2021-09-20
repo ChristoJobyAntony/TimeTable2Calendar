@@ -33,8 +33,8 @@ class Course :
         
         assert slot > 0 and slot < (self.timeTable.SLOTS)
         if slot < self.timeTable.MORNING_SLOTS : slot -= 1
-        startTime = (self.timeTable.theorySlots[slot]) if not self.lab else self.timeTable.labSlots[slot]
-        endTime = self.timeTable.theorySlots[slot+1] if not self.lab else self.timeTable.labSlots[slot+1]
+        startTime = (self.timeTable.timeSlots[slot]) if not self.lab else self.timeTable.labSlots[slot]
+        endTime = self.timeTable.timeSlots[slot+1] if not self.lab else self.timeTable.labSlots[slot+1]
         slot = Slot(date, startTime, endTime, self.timeTable, self)
         self.slots.append(slot)
         self.timeTable.events.append(slot)
