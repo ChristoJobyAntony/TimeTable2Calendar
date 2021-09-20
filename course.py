@@ -12,7 +12,7 @@ class Course :
     It inhertis the parent time-table configurations for creating an event
     """
         
-    def __init__(self, name:str, timeTable:'TimeTable', description='', lab=False, color:Colors=Colors.green) -> None:
+    def __init__(self, name:str, description='', lab=False, color:Colors=Colors.green) -> None:
         """
         The course object that acts like a collection for similar slots.
         It allows you to have similar titles and description among various slots, allowing for more concise code. 
@@ -22,8 +22,13 @@ class Course :
             description (str, optional): Optional description to add to all classes. Defaults to ''.
             color (Colors, optional): The color to identify the classes  Defaults to Colors.green.
         """
+        self.name = name
+        self.description = description
+        self.lab = lab
+        self.color = color
+        self.events = []
 
-    def addSlot(self, weekDay:Days, slot:int) -> None :
+    def addSlot(self, weekDay:Days, slot: int) -> None :
         date = self.timeTable.dates[weekDay.value]
         
         assert slot > 0 and slot < (self.timeTable.SLOTS)

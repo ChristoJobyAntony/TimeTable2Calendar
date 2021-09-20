@@ -14,7 +14,7 @@ A Generic Example of timetable creation without custom templates the time table.
 The default configurations of the time table class is used to genreate the time slots.
 """
 # Create a timetable to hold your course and provide the date unite the events reccur
-theoryTimeTable =  TimeTable(name='First Semester - Theory ', until=date(2022,2, 1) **{"MORNING_START_TIME":time(10, 00)})
+theoryTimeTable =  TimeTable(name='First Semester - Theory ', until=date(2022,2, 1), **{"MORNING_START_TIME":time(10, 00)})
 
 '''
 A Course object defines the common properties among the all the classes of your course
