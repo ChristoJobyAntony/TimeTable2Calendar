@@ -7,7 +7,7 @@ if TYPE_CHECKING :
 
 class Slot:
     def __init__(self, date: date, startTime:time, endTime: time, timeTable: 'TimeTable', course: 'Course') -> None:
-
+        
         """
         This is a simple python class wrapper for the the google events dictionary,
         
@@ -51,10 +51,3 @@ class Slot:
     def __repr__(self):
         weekday = WEEK_DAYS[self.eventDate.weekday()]
         return f"{self.course.name} ({weekday} {self.startTime} - {self.endTime})"
-
- 
-
-
-        
-
-        
