@@ -4,7 +4,7 @@
 
 ### Installation
 1. Clone the project and download it.
-2. Create a google cloud platform project and enable google calendar API [helo](https://developers.google.com/workspace/guides/create-project)
+2. Create a google cloud platform project and enable google calendar API [help](https://developers.google.com/workspace/guides/create-project)
 3. Create authorization credentials for a desktop application [help](https://developers.google.com/workspace/guides/create-credentials)
 4. Download the credentials save it  under the root directory as "credentials.json" 
 5. Follow the quick setup guide or create your script in the root directory and import the necessary classes
