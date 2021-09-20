@@ -1,70 +1,100 @@
-from datetime import datetime
 from timeTable import TimeTable
 from course import Course
 from datetime import date, time
 
 # Create a timetabe to hold your courses
 timeTable =  TimeTable(name='First Semester', until=date(year=2022, month=2, day=1))
-# print(timeTable.labSlots)
-# print(timeTable.theorySlots)
 
-Course(
-    '🧪 Engineering Chemistry : Theory', 
-    timeTable, 
-    description='BCHY101L Prof.Balamurali M.'
-    ).addSlots({'monday' : [1],'friday' : [3]})
 
-Course(
-    ' 🧪 Engineering Chemistry : Lab',
-    timeTable,
-    description='BCHY101P Prof.Buthanapalli Ramakrishnan',
+# Add your courses here
+BCHY101L = Course(
+    '🧪 Engineering Chemistry - Theory', 
+    description='[BCHY101L] Prof. Veera Venkata Ramesh E'
+)
+
+BCHY101P = Course(
+    ' 🧪 Engineering Chemistry - Lab',
+    description='[BCHY101P] Prof. Veera Venkata Ramesh E',
     lab=True
-    ).addSlots({'tuesday' : [7, 8]})
+)
 
-Course (
-    '💻 Computer Science Programming  : Theory',
-    timeTable,
-    description='BCSE101E Prof.Rajesh M. '
-).addSlots({'wednesday': [4]})
+BCSE101E = Course (
+    '💻 Computer Programming - Theory',
+    description='[BCSE101E] Prof. Tamizharasi T'
+)
 
-Course (
-    '💻 Computer Science Programming : Lab',
-    timeTable,
-    description='BCSE101E Prof.Rajesh M.',
+BCSE101EP = Course (
+    '💻 Computer Programming - Lab',
+    description='[BCSE101E] Prof. Tamizharasi T',
     lab=True
-).addSlots({'wednesday':[9,10], 'friday':[9,10]})
+)
 
-Course(
-    '⚡ Basic Electrical Engineering : Theory',
-    timeTable,
-    description='BEEE101L Prof.Meenakshi J.'
-).addSlots({'wednesday':[1], 'friday':[2]})
+BEEE101L = Course(
+    '⚡ Basic Electrical Engineering - Theory',
+    description='[BEEE101L] Prof. Tapan Prakash'
+)
 
-
-Course(
-    '⚡ Basic Electrical Engineering : Lab',
-    timeTable,
-    description='BEEE101P Prof.Meenakshi J.',
+BEEE101P = Course(
+    '⚡ Basic Electrical Engineering - Lab',
+    description='[BEEE101P] Prof. Tapan Prakash',
     lab=True
-).addSlots({'monday':[7,8]})
+)
 
-Course(
-    '🧮 Calculus : Theory',
-    timeTable,
-    description='BMAT101L Prof.Srutha Keerthi'
-).addSlots({'tuesday':[3], 'thursday':[4]})
+BMAT101L = Course(
+    '🧮 Calculus - Theory',
+    description='[BMAT101L] Prof. Karthika K'
+)
 
-Course(
-    '🧮 Calculus : Lab',
-    timeTable,
-    description='BMAT101P Prof.Muhunagai',
+BMAT101P = Course(
+    '🧮 Calculus - Lab',
+    description='[BMAT101P] Prof. Karthika K',
     lab=True
-).addSlots({'thursday' : [9,10]})
+)
 
-Course(
-    '🤹🏿 Qunatitative Skills Practice',
-    timeTable,
-    description="BSTS101P FACE(APT)"
-).addSlots({'monday':[4], 'thursday':[2]})
+BSTS101P = Course(
+    '🤹🏿 Quantitative Skills Practice',
+    description="[BSTS101P] SMART (APT)",
+    lab=True
+)
 
-print(timeTable.addToClaneder(dry_run=False))
+
+# Register your slots here
+timeTable.register('monday', {
+    1: BEEE101L,
+    4: BMAT101L,
+    11: BSTS101P
+})
+
+timeTable.register('tuesday', {
+    1: BMAT101L,
+    3: BCHY101L,
+    8: BSTS101P,
+    9: BMAT101P,
+    10: BMAT101P
+})
+
+timeTable.register('wednesday', {
+    2: BEEE101L,
+    7: BCSE101EP,
+    8: BCSE101EP,
+    9: BCHY101P,
+    10: BCHY101P
+})
+
+timeTable.register('thursday', {
+    2: BMAT101L,
+    4: BCHY101L,
+    7: BEEE101P,
+    8: BEEE101P,
+    9: BSTS101P
+})
+
+timeTable.register('friday', {
+    1: BCHY101L,
+    5: BCSE101E,
+    11: BCSE101EP,
+    12: BCSE101EP
+})
+
+#print(timeTable.events)
+print(timeTable.addToCalendar(dry_run=False))

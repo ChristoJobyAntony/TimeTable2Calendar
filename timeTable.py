@@ -7,13 +7,25 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from typing import List, Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING : 
-    from slot import Slot
-
 import os
 
-class TimeTable () : 
-    WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+MORNING_START_TIME = time(hour=8)
+EVENING_START_TIME = time(hour=14)
+
+THEORY_DELTA = timedelta(minutes=50)
+THEORY_BREAK = timedelta(minutes=10)
+
+LAB_DELTA = timedelta(minutes=50)
+# Lab break is alternating 0, 10
+LAB_BREAK = timedelta(minutes=0), timedelta(minutes=10)
+MORNING_SLOTS = 6
+EVENING_SLOTS = 6
+
+
+class TimeTable: 
     SCOPES = ['https://www.googleapis.com/auth/calendar']
 
     def __init__ (self, name:str,  until : datetime) :
@@ -21,49 +33,35 @@ class TimeTable () :
         # Constants that can be manually edited
         self.TZ_STR = "Asia/Kolkata"
         self.TZ = timezone(timedelta(hours=5, minutes=30))
-        self.MORNING_START_TIME = time(hour=8)
-        self.EVENING_START_TIME = time(hour=14)
-        self.THEORY_DELTA = timedelta(minutes=55)
-        self.LAB_DELTA = timedelta(minutes=50)
-        self.BREAK_DELTA = timedelta(minutes=5)
-        self.MORNING_SLOTS = 6
-        self.EVENING_SLOTS = 6
-
 
         self.name = name
         self.endDate = until
-        self.events : List['Slot'] = []
-        self.theorySlots = self._buildTheorySlots()
-        self.labSlots = self._buildLabSlots()
+        self.events: List['Slot'] = []
         self.dates = self._computeDates()
+        self.theorySlots = self._buildTheorySlots()
+        self.labSlots = self._buildLabSlots() 
         self.service = self._serviceBuilder()
-        
-        
 
-    def _buildTheorySlots (self) -> Tuple[time]:
-        theorySlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            theorySlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            theorySlots.append(pointer)
-            pointer = self._addToTime(pointer, self.THEORY_DELTA)
-        return tuple(theorySlots)
+    def _build_slots(self, total_slots: int, start_time: time, slot_time: timedelta, break_times):
+        slots = []
+        if not isinstance(break_times, (list, tuple)):
+            break_times = (break_times,)
+
+        for i in range(total_slots):
+            end_time = self._addToTime(start_time, slot_time)
+            slots.append((start_time, end_time))
+            start_time = self._addToTime(end_time, break_times[i % len(break_times)])
+        return slots
+
+    def _buildTheorySlots(self):
+        slots = self._build_slots(MORNING_SLOTS, MORNING_START_TIME, THEORY_DELTA, THEORY_BREAK)
+        slots += self._build_slots(EVENING_SLOTS, EVENING_START_TIME, THEORY_DELTA, THEORY_BREAK)
+        return slots
     
-    def _buildLabSlots (self) -> Tuple[time] : 
-        labSlots = []
-        pointer = self.MORNING_START_TIME
-        for i in range(self.MORNING_SLOTS+1) : 
-            labSlots.append(pointer) 
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
-
-        pointer = self.EVENING_START_TIME
-        for i in range(self.EVENING_SLOTS+1) :
-            labSlots.append(pointer)
-            pointer = self._addToTime(pointer, self.LAB_DELTA)
-        return tuple(labSlots)
+    def _buildLabSlots(self) : 
+        slots = self._build_slots(MORNING_SLOTS, MORNING_START_TIME, LAB_DELTA, LAB_BREAK)
+        slots += self._build_slots(EVENING_SLOTS, EVENING_START_TIME, LAB_DELTA, LAB_BREAK)
+        return slots
     
     def _computeDates (self) -> Tuple[date] :
         pointer = date.today()
@@ -107,7 +105,7 @@ class TimeTable () :
         created_calendar = self.service.calendars().insert(body=calendar).execute()
         return created_calendar['id']
 
-    def addToClaneder (self, dry_run=False) -> List[str] :
+    def addToCalendar (self, dry_run=False) -> List[str] :
         if dry_run : 
             for event in self.events  :
                 print(event.event)
@@ -120,7 +118,15 @@ class TimeTable () :
             events.append(event)
         return events
 
-    def _addToTime (self, t : time, d : timedelta) -> time :
+    def register(self, weekday, course_dict):
+        assert weekday.lower() in WEEK_DAYS
+        weekDayInt = WEEK_DAYS.index(weekday.lower())
+
+        for slot_id, course in course_dict.items():
+            assert slot_id > 0 and slot_id <= (MORNING_SLOTS + EVENING_SLOTS)
+            course.addSlot(self, weekDayInt, slot_id)
+
+    def _addToTime (self, t: time, d: timedelta) -> time :
         dt = datetime(100, 1, 1, t.hour, t.minute, t.second) + d
         return dt.time()
         
