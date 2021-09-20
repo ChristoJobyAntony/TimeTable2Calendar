@@ -14,19 +14,14 @@ class Course :
         
     def __init__(self, name:str, timeTable:'TimeTable', description='', lab=False, color:Colors=Colors.green) -> None:
         """
+        The course object that acts like a collection for similar slots.
+        It allows you to have similar titles and description among various slots, allowing for more concise code. 
+
         Args:
             name (str): Name/ Summary of Course
-            timeTable (TimeTable): parent TimeTable to inherit
-            description (str, optional): Optional desription to add to all classes. Defaults to ''.
-            lab (bool, optional): Is this course a lab or theory ?. Defaults to Theory.
+            description (str, optional): Optional description to add to all classes. Defaults to ''.
             color (Colors, optional): The color to identify the classes  Defaults to Colors.green.
         """
-        self.name = name
-        self.description = description
-        self.lab = lab
-        self.timeTable = timeTable
-        self.color = color
-        self.slots : List[Slot]= []
 
     def addSlot(self, weekDay:Days, slot:int) -> None :
         date = self.timeTable.dates[weekDay.value]
