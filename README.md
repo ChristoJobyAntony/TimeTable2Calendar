@@ -1,4 +1,4 @@
-TIMETABLE2CALENDER 
+TIMETABLE2calendar 
  
 An application to automate adding your School/College timetables to your google calendar using  google calendar API.
  
