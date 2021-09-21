@@ -33,7 +33,7 @@ class Slot:
         event =  {
             'summary': self.course.name,
             'description' : self.course.description,
-            'colorId' : self.course.color.value,  
+            'colorId' : self.course.color.value if self.course.color else None,  
             'start': {
                 'dateTime': startDateTime.isoformat(),
                 'timeZone': self.timeTable.TZ_STR
@@ -45,9 +45,14 @@ class Slot:
             'recurrence': [
                 'RRULE:FREQ=WEEKLY;UNTIL='+until,
             ],
+            'reminders' : {
+                'useDefault' : not bool(self.course.reminders),
+                'overrides' : [{'method' : k.value, 'minutes' : v} for k, v in self.course.reminders] if self.course.reminders else None
+                }
         }
+       
         return event
 
     def __repr__(self):
-        weekday = WEEK_DAYS[self.eventDate.weekday()]
+        weekday = self.eventDate.weekday()
         return f"{self.course.name} ({weekday} {self.startTime} - {self.endTime})"

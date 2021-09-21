@@ -6,12 +6,8 @@ from google.oauth2.credentials import Credentials
 from typing import Dict, List, Tuple, TYPE_CHECKING
 from enums import Days
 from slot import Slot
+from course import Course
 import os
-
-
-if TYPE_CHECKING : 
-    from course import Course
-
 
 
 WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -38,6 +34,7 @@ class TimeTable () :
             breakDelta = (timedelta(minutes=5),) The break between classes
             morningSlots = 6
             eveningSlots = 6
+            defaultCourseConfig = {}
         """
         
         self.TZ_STR = "Asia/Kolkata"
@@ -48,14 +45,16 @@ class TimeTable () :
         self.breakDelta = timedelta(minutes=5)
         self.morningSlots = 6
         self.eveningSlots = 6
+        self.defaultCourseConfig = {}
 
         self.__dict__.update(config)
 
         self.name = name
         self.endDate = until
         self.events : List['Slot'] = []
+        self.courses : List['Course'] = []
         self.dates = self._computeDates()
-        self.breakDelta = tuple(self.breakDelta) if type(self.breakDelta) == (tuple) else self.breakDelta
+        self.breakDelta = (self.breakDelta, ) if type(self.breakDelta) != (tuple) else self.breakDelta
         self.service = self._serviceBuilder()
 
         if  not template  : 
@@ -68,7 +67,7 @@ class TimeTable () :
     def _buildTimeSlots (self, slots:int, startTime:time, slotDelta:timedelta, breakDelta:Tuple[timedelta]) -> Tuple[Tuple[time,time]]:
         timeSlots = []
         pointer = startTime
-        for i in range(slots+1) : 
+        for i in range(slots) : 
             duration = (pointer, self._addToTime(pointer, slotDelta))
             timeSlots.append(duration) 
             pointer = self._addToTime(duration[1], breakDelta[i % len(breakDelta)])
@@ -98,7 +97,7 @@ class TimeTable () :
                 credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', self.SCOPES)
+                    'credentials.json', SCOPES)
                 credentials = flow.run_local_server(port=0)
             # Save the credentials for the next run
             with open('token.json', 'w') as token:
@@ -120,6 +119,19 @@ class TimeTable () :
     def _addToTime (self, t : time, d : timedelta) -> time :
         dt = datetime(100, 1, 1, t.hour, t.minute, t.second) + d
         return dt.time()
+    
+    def _inheritConfig(self, course:Course) -> Course: 
+        if course in self.courses : return
+        config = {}
+        for k, v in course.__dict__.items() :
+            if v : 
+                config[k] = v
+            elif self.defaultCourseConfig.get(k) :
+                config[k] = self.defaultCourseConfig.get(k)
+            else : 
+                config[k] = v
+        config = Course(**config).__dict__
+        course.__dict__.update(config)
 
     def addToCalendar (self, dry_run=False) -> List[dict] :
         """Adds the registered course to your google calendar 
@@ -146,13 +158,18 @@ class TimeTable () :
             course_dict (Dict[Days, Dict[int, Course]]): Pass a dictionary in format {Days : {<slot-id>, <course>} }
         """
         for day, courses in course_dict.items() :
-            for slot_id, course in courses.items():
+            for slot_id, course in courses.items():              
+                if not course : continue
+                
                 assert slot_id > 0 and slot_id <= (self.SLOTS)
-                if not course  :continue
                 slot_id -= 1
                 date = self.dates[day.value]
+                
+                # Inherit the default timetable config
+                self._inheritConfig(course)
+                
                 # Check if block periods : 
-                if  courses.get(slot_id+2) == course : 
+                if courses.get(slot_id+2) == course : 
                     startTime = self.timeSlots[slot_id][0]
                     endTime = self.timeSlots[slot_id + 1][1]
                     courses[slot_id+2] = None

@@ -22,3 +22,8 @@ class Days (Enum) :
     Friday = 4 
     Saturday = 5
     Sunday = 6
+
+
+class Reminder (Enum) : 
+    email = 'email'
+    popup = 'popup'

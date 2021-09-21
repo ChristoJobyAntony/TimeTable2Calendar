@@ -1,5 +1,5 @@
 from datetime import time
-from enums import Colors, Days
+from enums import Colors, Days, Reminder
 from timeTable import TimeTable
 from course import Course
 from datetime import date
@@ -14,33 +14,37 @@ A Generic Example of timetable creation without custom templates the time table.
 The default configurations of the time table class is used to genreate the time slots.
 """
 # Create a timetable to hold your course and provide the date unite the events reccur
-theoryTimeTable =  TimeTable(name='First Semester - Theory ', until=date(2022,2, 1), **{"MORNING_START_TIME":time(10, 00)})
+theoryTimeTable =  TimeTable(
+    name='First Semester - Theory ', 
+    until=date(2022,2, 1), 
+    **{'defaultCourseConfig': { 'reminders':(Reminder.popup, 10) } }
+    )
 
 '''
 A Course object defines the common properties among the all the classes of your course
 '''
 BCHY101L = Course(
     '🧪 Engineering Chemistry : Theory',  
-    description='BCHY101L Prof.Balamurali M.',
-    color=Colors.yellow
 )
 
 BCSE101E = Course (
     '💻 Computer Science Programming  : Theory',
     description='BCSE101E Prof.Rajesh M. ',
-    color=Colors.turquoise
+    color=Colors.turquoise,
 )
 
 BEEE101L = Course(
     '⚡ Basic Electrical Engineering : Theory',
     description='BEEE101L Prof.Meenakshi J.',
-    color=Colors.blue
+    color=Colors.blue,
 )
 
+# You can setup course specific attributes the will override the default
 BMAT101L = Course(
     '🧮 Calculus : Theory',
     description='BMAT101L Prof.Srutha Keerthi',
-    color=Colors.red
+    color=Colors.red,
+    reminders=((Reminder.popup, 20),) 
 )
 
 """
@@ -58,7 +62,7 @@ theoryTimeTable.register({
 """
 Now we add the registered courses to your google calender !
 """
-theoryTimeTable.addToCalendar(dry_run=True)
+theoryTimeTable.addToCalendar(dry_run=False)
 
 #################################################################
 
@@ -80,46 +84,51 @@ template = (
     (time(18,30), time(19,20)),
 )
 # Initiate the TimeTable class with the template parameter 
-labTimeTable = TimeTable('First Semester : Lab', date(2022, 2, 1), template)
+labTimeTable = TimeTable(
+    name='First Semester : Lab',
+    until=date(2022, 2, 1),
+    template=template,
+    **{'defaultCourseConfig':{'reminders':(Reminder.popup, 10)}} 
+    )
 
 
 BCHY101P = Course(
     ' 🧪 Engineering Chemistry : Lab',
     description='BCHY101P Prof.Buthanapalli Ramakrishnan',
-    color=Colors.yellow
+    color=Colors.yellow,
 )
 
 BCSE101E = Course (
     '💻 Computer Science Programming : Lab',
     description='BCSE101E Prof.Rajesh M.',
-    color=Colors.turquoise
+    color=Colors.turquoise,
 )
 
 BEEE101P = Course(
     '⚡ Basic Electrical Engineering : Lab',
     description=' Prof.Meenakshi J.',
-    color=Colors.blue
+    color=Colors.blue,
 )
 
 BMAT101P = Course(
     '🧮 Calculus : Lab',
     description='BMAT101P Prof.Muhunagai',
-    color=Colors.red
+    color=Colors.red,
 )
 
 BSTS101P =Course(
     '🤹🏿 Quantitative Skills Practice',
     description="BSTS101P FACE(APT)",
-    color=Colors.purple
+    color=Colors.purple,
 )
 
 
 labTimeTable.register({
     Days.Monday : {4:BSTS101P, 7:BEEE101P, 8:BEEE101P},
-    Days.Tuesday : {1:BSTS101P, 7:BSTS101P, 8:BSTS101P},
+    Days.Tuesday : {1:BSTS101P, 7:BCHY101L, 8:BCHY101L},
     Days.Wednesday : {9 : BCSE101E, 10: BCSE101E},
     Days.Thursday : {2: BSTS101P, 9:BMAT101P},
     Days.Friday : {9: BCSE101E, 10:BCSE101E}
 })
 
-labTimeTable.addToCalendar(dry_run=True)
+labTimeTable.addToCalendar(dry_run=False)
