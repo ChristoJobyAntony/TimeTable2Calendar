@@ -45,7 +45,7 @@ class TimeTable () :
         self.morningStartTime = time(hour=8)
         self.eveningStartTime = time(hour=14)
         self.classDelta = timedelta(minutes=50)
-        self.breakDelta = (timedelta(minutes=5), )
+        self.breakDelta = timedelta(minutes=5)
         self.morningSlots = 6
         self.eveningSlots = 6
 
@@ -55,6 +55,7 @@ class TimeTable () :
         self.endDate = until
         self.events : List['Slot'] = []
         self.dates = self._computeDates()
+        self.breakDelta = tuple(self.breakDelta) if type(self.breakDelta) == (tuple) else self.breakDelta
         self.service = self._serviceBuilder()
 
         if  not template  : 
