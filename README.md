@@ -17,6 +17,7 @@
 ### The TimeTable Object : 
 This object holds the setting for the general structure of your time-table and also all the courses and events that have been added.
 It computes your class slots, based on the configurations or you can provide your custom template for the time slots.
+You can config the default settings of your S
 It is also responsible to connect to google calendars and insert your timetable
 The default time-table configuration : 
 ```
@@ -28,7 +29,8 @@ TZ = timezone(timedelta(hours=5, minutes=30))
 'classDelta' = timedelta(minutes=50) The duration of each class
 'breakDelta' = (timedelta(minutes=5),) The break between classes
 'morningSlots' = 6
-'eveningSlots' = 6
+'eveningSlots' = 6,
+'
 }
 ```
 

@@ -124,12 +124,12 @@ class TimeTable () :
         if course in self.courses : return
         config = {}
         for k, v in course.__dict__.items() :
-            if v : 
+            if v != None: 
                 config[k] = v
             elif self.defaultCourseConfig.get(k) :
                 config[k] = self.defaultCourseConfig.get(k)
             else : 
-                config[k] = v
+                config[k] = None
         config = Course(**config).__dict__
         course.__dict__.update(config)
 
@@ -166,7 +166,7 @@ class TimeTable () :
                 date = self.dates[day.value]
                 
                 # Inherit the default timetable config
-                self._inheritConfig(course)
+                if course not in self.courses : course.inherit(self)
                 
                 # Check if block periods : 
                 if courses.get(slot_id+2) == course : 

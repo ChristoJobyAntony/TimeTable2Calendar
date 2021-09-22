@@ -9,7 +9,7 @@ if TYPE_CHECKING :
 
 class Course : 
             
-    def __init__(self, name:str, description=None, color:'Colors'=None, reminders:Tuple[Tuple[Reminder, time]]=None, **config) -> None:
+    def __init__(self, name:str, **config) -> None:
         """
         The course object that acts like a collection for similar slots.
         It allows you to have similar titles and description among various slots, allowing for more concise code. 
@@ -18,16 +18,27 @@ class Course :
             name (str): Name/ Summary of Course
             description (str, optional): Optional description to add to all classes. Defaults to ''.
             color (Colors, optional): The color to identify the classes  Defaults to Colors.green.
-        """
-        self.__dict__.update(config)
-        
+        """        
         self.name = name
-        self.description = description
-        self.color = color
-        self.events = []
-        self.reminders = (reminders,) if reminders and type(reminders[0]) != tuple else  reminders
+        self._buildSelf(config)
 
+    def _buildSelf(self, config:dict) :
+        self.description = config.get('description')
+        self.color = config.get('color')
+        self.events = config.get('events', []) 
+        reminders = config.get('reminders')
+        self.reminders = (reminders,) if reminders and type(reminders[0]) != tuple else  reminders
         
+    def inherit(self, timeTable : 'TimeTable') : 
+        config = {}
+        for k, v in self.__dict__.items() :
+            if k == None and timeTable.defaultCourseConfig.get(v): 
+                config[k] = timeTable.defaultCourseConfig.get(v)
+            else : 
+                config[k] = self.__dict__.get(k)
+        self._buildSelf(config)
+
+
 
 
     
